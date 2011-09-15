@@ -39,11 +39,14 @@
 MARSHMALLOW_NAMESPACE_USE;
 using namespace Graphics;
 
-const Core::Type Viewport::sType("DUMMY");
+/******************************************************************************/
 
-struct Viewport::Internal
+namespace
 {
-};
+	static Math::Triplet s_camera(0.f, 0.f, 1.f);
+} // namespace
+
+/******************************************************************************/
 
 bool
 Viewport::Initialize(int w, int h, int d, bool f)
@@ -84,23 +87,23 @@ Viewport::SwapBuffer(void)
 {
 }
 
-const Math::Triplet
+const Math::Triplet &
 Viewport::Camera(void)
 {
-	return(Math::Triplet(0.f, 0.f, 1.f));
+	return(s_camera);
 }
 
 void
-Viewport::MoveCamera(const Math::Triplet &)
+Viewport::MoveCamera(const Math::Triplet &c)
 {
+	s_camera = c;
 }
 
-const float *
-Viewport::VisibleArea(void)
+void
+Viewport::VisibleArea(Math::Point2 *tl, Math::Point2 *br)
 {
-	static float s_visible[4] = {-DEFAULT_VIEWPORT_VWIDTH / 2,  DEFAULT_VIEWPORT_VHEIGHT / 2,
-	                              DEFAULT_VIEWPORT_VWIDTH / 2, -DEFAULT_VIEWPORT_VHEIGHT / 2};
-	return(s_visible);
+	if (tl) *tl = Math::Point2(-DEFAULT_VIEWPORT_VWIDTH / 2.f,  DEFAULT_VIEWPORT_VHEIGHT / 2.f);
+	if (br) *br = Math::Point2( DEFAULT_VIEWPORT_VWIDTH / 2.f, -DEFAULT_VIEWPORT_VHEIGHT / 2.f);
 }
 
 const Math::Size2f
@@ -115,21 +118,10 @@ Viewport::WindowSize(void)
 	return(Math::Size2i(DEFAULT_VIEWPORT_WIDTH, DEFAULT_VIEWPORT_HEIGHT));
 }
 
-float
-Viewport::MapToWorld(int x)
-{
-	return(static_cast<float>(x));
-}
-
-int
-Viewport::MapFromWorld(float x)
-{
-	return(static_cast<int>(floor(x)));
-}
-
 const Core::Type &
 Viewport::Type(void)
 {
-	return(sType);
+	static const Core::Type s_type("DUMMY");
+	return(s_type);
 }
 
