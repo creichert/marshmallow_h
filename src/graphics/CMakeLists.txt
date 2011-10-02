@@ -45,6 +45,19 @@ elseif(WIN32 AND MARSHMALLOW_VIEWPORT_USE_WGL)
 	set(MARSHMALLOW_GRAPHICS_SRCS ${MARSHMALLOW_GRAPHICS_SRCS}
 	                              ${MARSHMALLOW_GRAPHICS_OPENGL_SRCS}
 	                              opengl/viewport-wgl.cpp)
+elseif(UNIX AND MARSHMALLOW_VIEWPORT_USE_QT)
+	include_directories(${QT_INCLUDE_DIR})
+	qt4_wrap_cpp(MOC opengl/qtglwindow.h)
+	set(MARSHMALLOW_GRAPHICS_SRCS ${MARSHMALLOW_GRAPHICS_SRCS}
+	                              ${MARSHMALLOW_GRAPHICS_OPENGL_SRCS}
+	                              opengl/viewport-qt.cpp
+	                              opengl/qtglwindow.cpp
+	                              ${MOC})
+        set(MARSHMALLOW_GRAPHICS_LIBS ${MARSHMALLOW_GRAPHICS_LIBS}
+	                              ${QT_LIBRARIES}
+	                              ${QT_QTOPENGL_LIBRARY}
+	                              ${QT_QTGUI_LIBRARY}
+	                              ${QT_QTCORE_LIBRARY})
 elseif(MARSHMALLOW_VIEWPORT_USE_DUMMY)
 	message(WARNING "You currently only have MARSHMALLOW_VIEWPORT_USE_DUMMY enabled!\n"
 	                "Please don't forget to select your TARGET VIEWPORT.")

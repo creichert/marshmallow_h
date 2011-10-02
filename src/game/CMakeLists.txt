@@ -2,6 +2,10 @@ add_definitions(-DGAME_LIBRARY)
 
 file(GLOB MARSHMALLOW_GAME_SRCS *.cpp)
 
+if(MARSHMALLOW_VIEWPORT_USE_QT)
+	include_directories(${QT_INCLUDE_DIR})
+endif()
+
 set(MARSHMALLOW_GAME_LIBS
 	marshmallow_core
 	marshmallow_event

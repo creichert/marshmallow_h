@@ -26,6 +26,11 @@
  * or implied, of Marshmallow Engine.
  */
 
+#define MARSHMALLOW_VIEWPORT_USE_QT 1
+#if MARSHMALLOW_VIEWPORT_USE_QT
+#include <QtGui/QApplication>
+#endif
+
 #include "game/enginebase.h"
 
 /*!
@@ -139,6 +144,9 @@ EngineBase::setFactory(const SharedFactory &f)
 int
 EngineBase::run(void)
 {
+#if MARSHMALLOW_VIEWPORT_USE_QT
+	QApplication app(0);
+#endif // MARSHMALLOW_VIEWPORT_USE_QT
 	if (!initialize()) {
 		MMERROR1("Engine initialization failed");
 		finalize();
@@ -209,6 +217,9 @@ EngineBase::run(void)
 
 	finalize();
 
+#if MARSHMALLOW_VIEWPORT_USE_QT
+	return app.exec();
+#endif // MARSHMALLOW_VIEWPORT_USE_QT
 	return(m_exit_code);
 }
 
