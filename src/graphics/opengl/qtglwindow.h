@@ -41,12 +41,14 @@
 
 class QPaintEvent;
 class QWidget;
+class QKeyEvent;
 
 class QtGLWindow : public QGLWidget
 {
 Q_OBJECT
 public:
 	explicit QtGLWindow(QWidget* parent=0);
+	explicit QtGLWindow(QGLContext* context, QWidget* parent = 0, const QGLWidget* shareWidget = 0, Qt::WindowFlags f = 0);
 	~QtGLWindow();
 
 protected:
@@ -54,6 +56,8 @@ protected:
 	void resizeGL(int width, int height);
 	void initializeGL();
 	void paintEvent(QPaintEvent *event);
+	virtual void keyPressEvent(QKeyEvent* event);
+	virtual void keyReleaseEvent(QKeyEvent* event);
 };
 
 #endif // QTGLWIDGET_H

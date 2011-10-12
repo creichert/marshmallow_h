@@ -28,7 +28,8 @@
 
 #include <QtGui/QApplication>
 #include <QtOpenGL/QGLWidget>
-
+#include <QtOpenGL/QGLContext>
+#include <QtOpenGL/QGLFormat>
 #include <QtCore/QDebug>
 
 #include "graphics/viewport.h"
@@ -41,6 +42,7 @@
  */
 
 #ifdef Q_WS_X11
+#include <QtGui/QX11Info>
 #include <X11/X.h>
 #define XMD_H
 #include <X11/XKBlib.h>
@@ -51,8 +53,6 @@
 
 #include "core/logger.h"
 
-#include "event/eventmanager.h"
-#include "event/keyboardevent.h"
 #include "event/quitevent.h"
 
 #include "graphics/painter.h"
@@ -65,15 +65,12 @@ using namespace Graphics;
 namespace
 {
 	struct ViewportData {
-#ifdef Q_WS_X11
-		XF86VidModeModeInfo dvminfo;
-		Display      *display;
-		Atom          wm_delete;
-#endif
+		QApplication *app;
 		QtGLWindow   *window;
+		QGLFormat    *format;
+		QGLContext   *context;
 		Math::Size2i  wsize;
 		int           screen;
-		QGLContext   *context;
 		Math::Triplet camera;
 		Math::Size2f  size;
 		Math::Point2  visible[2];
@@ -99,10 +96,6 @@ namespace
 		s_data.visible[0] = s_data.visible[1] = Math::Point2::Zero();
 		s_data.window = 0;
 		s_data.wsize[0] = s_data.wsize[1] = 0;
-#ifdef Q_WS_X11
-		s_data.display = 0;
-		s_data.wm_delete = 0;
-#endif
 	}
 
 	bool
@@ -116,18 +109,11 @@ namespace
 		s_data.fullscreen = f;
 		s_data.wsize[0] = w;
 		s_data.wsize[1] = h;
-#ifdef Q_WS_X11
-		/* open display */
-		s_data.display   = 0;
-		s_data.wm_delete = 0;
-		if (!(s_data.display = XOpenDisplay(0))) {
-			MMERROR1("Unable to open X Display.");
-			return(false);
-		}
-#endif
 
 		/* create context */
-		s_data.window = new QtGLWindow;
+		s_data.format = new QGLFormat;
+		s_data.context = new QGLContext(*s_data.format);
+		s_data.window = new QtGLWindow(s_data.context);
 
 		/* initialize context */
 		UpdateViewport();
@@ -143,43 +129,63 @@ namespace
 	void
 	DestroyWindow(void)
 	{
-		s_data.display = 0;
 		s_data.loaded = false;
 		s_data.screen = 0;
-		s_data.wm_delete = 0;
 
 		delete s_data.context; s_data.context = 0;
 		delete s_data.window; s_data.window = 0;
+		delete s_data.app; s_data.app = 0;
 	}
 
 	bool
 	IsExtensionSupported(const char *list, const char *extension)
 	{
+		return(false);
 	}
 
 	bool
 	CheckVBOSupport(void)
 	{
+		return(false);
 	}
 
 	void
 	UpdateViewport(void)
 	{
+        s_data.size[0] = DEFAULT_VIEWPORT_VWIDTH * s_data.camera[2];
+		s_data.size[1] = DEFAULT_VIEWPORT_VHEIGHT * s_data.camera[2];
+
+		const float l_hw = s_data.size[0] / 2.f;
+		const float l_hh = s_data.size[1] / 2.f;
+
+		/* update visible area */
+		s_data.visible[0][0] = -l_hw + s_data.camera[0];
+		s_data.visible[0][1] =  l_hh + s_data.camera[1];
+		s_data.visible[1][0] =  l_hw + s_data.camera[0];
+		s_data.visible[1][1] = -l_hh + s_data.camera[1];
+
+#ifdef Q_WS_X11
+		/* update projection */
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(s_data.visible[0].x(), s_data.visible[1].x(),
+		        s_data.visible[1].y(), s_data.visible[0].y(), -1.f, 1.f);
+		glMatrixMode(GL_MODELVIEW);
+#endif // Q_WS_X11
+
 	}
 
-	void
-	HandleKeyEvent(QKeyEvent &key)
-	{
-	}
 } // namespace
 
-///******************************************************************************/
+/******************************************************************************/
 
 bool
 Viewport::Initialize(int w, int h, int d, bool f)
 {
-	InitializeViewport();
-
+    InitializeViewport();
+	int argc = 0;
+	char** argv = 0;
+	s_data.app = new QApplication(argc, argv, QApplication::GuiServer);
 	if (!CreateWindow(w, h, d, f)) {
 		DestroyWindow();
 		return(false);
@@ -200,7 +206,7 @@ bool
 Viewport::Redisplay(int w, int h, int d, bool f)
 {
 	DestroyWindow();
-
+	QCoreApplication::processEvents();
 	if(!CreateWindow(w, h, d, f)) {
 		DestroyWindow();
 		return(false);
@@ -211,6 +217,7 @@ Viewport::Redisplay(int w, int h, int d, bool f)
 void
 Viewport::Tick(TIME t)
 {
+	QCoreApplication::processEvents(QEventLoop::AllEvents);
 }
 
 void
@@ -219,7 +226,7 @@ Viewport::SwapBuffer(void)
 	s_data.window->swapBuffers();
 	glClearColor(.0f, .0f, .0f, .0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glLoadIdentity();
+	//glLoadIdentity();
 }
 
 const Math::Triplet &
