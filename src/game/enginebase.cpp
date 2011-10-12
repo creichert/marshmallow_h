@@ -27,7 +27,6 @@
  */
 
 #include "game/enginebase.h"
-#include "game/config.h"
 
 /*!
  * @file
@@ -48,10 +47,6 @@
 
 #include "game/factory.h"
 #include "game/scenemanager.h"
-
-#ifdef MARSHMALLOW_VIEWPORT_USE_QT
-#include <QtGui/QApplication>
-#endif
 
 extern int iAllocations;
 extern int iDeallocations;
@@ -144,9 +139,6 @@ EngineBase::setFactory(const SharedFactory &f)
 int
 EngineBase::run(void)
 {
-#ifdef MARSHMALLOW_VIEWPORT_USE_QT
-	QApplication app(0);
-#endif // MARSHMALLOW_VIEWPORT_USE_QT
 	if (!initialize()) {
 		MMERROR1("Engine initialization failed");
 		finalize();
@@ -217,9 +209,6 @@ EngineBase::run(void)
 
 	finalize();
 
-#ifdef MARSHMALLOW_VIEWPORT_USE_QT
-	return app.exec();
-#endif // MARSHMALLOW_VIEWPORT_USE_QT
 	return(m_exit_code);
 }
 

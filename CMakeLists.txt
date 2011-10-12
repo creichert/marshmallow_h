@@ -106,10 +106,6 @@ configure_file(
 	${PROJECT_SOURCE_DIR}/src/graphics/config.in.h
 	${PROJECT_BINARY_DIR}/src/graphics/config.h
 )
-configure_file(
-	${PROJECT_SOURCE_DIR}/src/game/config.in.h
-	${PROJECT_BINARY_DIR}/src/game/config.h
-)
 
 ##################################################################### PLATFORM #
 
