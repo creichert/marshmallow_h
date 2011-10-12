@@ -4,5 +4,5 @@
 	branch = master
 [submodule "contrib/eastl/code"]
 	path = contrib/eastl/code
-	url = git://github.com/gamaral/EASTL.git
+	url = git@github.com:creichert/EASTL.git
 	branch = gamaral
