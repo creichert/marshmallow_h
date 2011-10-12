@@ -53,7 +53,7 @@ elseif(UNIX AND MARSHMALLOW_VIEWPORT_USE_QT)
 	                              opengl/viewport-qt.cpp
 	                              opengl/qtglwindow.cpp
 	                              ${MOC})
-        set(MARSHMALLOW_GRAPHICS_LIBS ${MARSHMALLOW_GRAPHICS_LIBS}
+	set(MARSHMALLOW_GRAPHICS_LIBS ${MARSHMALLOW_GRAPHICS_LIBS}
 	                              ${QT_LIBRARIES}
 	                              ${QT_QTOPENGL_LIBRARY}
 	                              ${QT_QTGUI_LIBRARY}

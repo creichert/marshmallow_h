@@ -37,6 +37,7 @@
 #ifndef GAME_ENGINEBASE_H
 #define GAME_ENGINEBASE_H 1
 
+#include "game/config.h"
 #include "game/iengine.h"
 
 #include "core/shared.h"

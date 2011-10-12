@@ -26,12 +26,8 @@
  * or implied, of Marshmallow Engine.
  */
 
-#define MARSHMALLOW_VIEWPORT_USE_QT 1
-#if MARSHMALLOW_VIEWPORT_USE_QT
-#include <QtGui/QApplication>
-#endif
-
 #include "game/enginebase.h"
+#include "game/config.h"
 
 /*!
  * @file
@@ -52,6 +48,10 @@
 
 #include "game/factory.h"
 #include "game/scenemanager.h"
+
+#ifdef MARSHMALLOW_VIEWPORT_USE_QT
+#include <QtGui/QApplication>
+#endif
 
 extern int iAllocations;
 extern int iDeallocations;
@@ -144,7 +144,7 @@ EngineBase::setFactory(const SharedFactory &f)
 int
 EngineBase::run(void)
 {
-#if MARSHMALLOW_VIEWPORT_USE_QT
+#ifdef MARSHMALLOW_VIEWPORT_USE_QT
 	QApplication app(0);
 #endif // MARSHMALLOW_VIEWPORT_USE_QT
 	if (!initialize()) {
@@ -217,7 +217,7 @@ EngineBase::run(void)
 
 	finalize();
 
-#if MARSHMALLOW_VIEWPORT_USE_QT
+#ifdef MARSHMALLOW_VIEWPORT_USE_QT
 	return app.exec();
 #endif // MARSHMALLOW_VIEWPORT_USE_QT
 	return(m_exit_code);
