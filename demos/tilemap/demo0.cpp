@@ -31,12 +31,15 @@
 
 #include <graphics/factory.h>
 #include <graphics/tileset.h>
+#include <graphics/transform.h>
 #include <graphics/viewport.h>
 
 #include <game/enginebase.h>
 #include <game/scenebase.h>
 #include <game/scenemanager.h>
 #include <game/tilemapscenelayer.h>
+
+#define TIMEOUT 16
 
 MARSHMALLOW_NAMESPACE_USE;
 
@@ -65,7 +68,7 @@ public:
 			assert(l_texture->isLoaded() && "Failed to load tilemap asset!");
 
 			Graphics::SharedTilesetBase l_tileset = new Graphics::Tileset;
-			l_tileset->setTileSize(Math::Size2i(24, 24));
+			l_tileset->setTileSize(Math::Size2i(32, 32));
 			l_tileset->setTextureData(l_texture);
 
 			Game::SharedTilemapSceneLayer l_tslayer;
@@ -74,7 +77,7 @@ public:
 			/* layer 1 */
 			l_tslayer = new Game::TilemapSceneLayer("bottom", *this);
 			l_tslayer->setSize(Math::Size2i(80, 60));
-			l_tslayer->setTileSize(Math::Size2i(24, 24));
+			l_tslayer->setTileSize(Math::Size2i(32, 32));
 			l_tslayer->attachTileset(1, l_tileset.staticCast<Graphics::ITileset>());
 
 			/* generate random tilemap */
@@ -89,7 +92,7 @@ public:
 			l_tslayer = new Game::TilemapSceneLayer("overlay", *this);
 			l_tslayer->setOpacity(0.15f);
 			l_tslayer->setSize(Math::Size2i(80, 60));
-			l_tslayer->setTileSize(Math::Size2i(24, 24));
+			l_tslayer->setTileSize(Math::Size2i(32, 32));
 			l_tslayer->attachTileset(1, l_tileset.staticCast<Graphics::ITileset>());
 
 			/* generate random tilemap */
@@ -116,14 +119,13 @@ class Demo : public Game::EngineBase
 public:
 
 	Demo(void)
-	: EngineBase(1, 1),
+	: EngineBase(60, 60),
 	  m_stop_timer(0)
 	{
 	}
 
 	VIRTUAL bool initialize(void)
 	{
-		MMINFO1("FYI - Engine set to 1 FPS");
 		EngineBase::initialize();
 
 		Game::SharedScene l_scene(new DemoScene);
@@ -136,10 +138,11 @@ public:
 	{
 		EngineBase::second();
 
-		if (++m_stop_timer == 30)
+		if (++m_stop_timer == TIMEOUT)
 			stop();
 
-		Graphics::Viewport::MoveCamera(Math::Triplet(0, 0, 1.f - m_stop_timer/30.f));
+		Graphics::Transform &l_camera = Graphics::Viewport::Camera();
+		l_camera.setScale(Math::Pair(1.f + m_stop_timer / 8.f, 1.f + m_stop_timer / 8.f));
 	}
 };
 

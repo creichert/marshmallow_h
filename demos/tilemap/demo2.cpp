@@ -29,27 +29,68 @@
 #include <core/identifier.h>
 #include <core/logger.h>
 
-#include <math/vector2.h>
-
 #include <graphics/factory.h>
 #include <graphics/tileset.h>
 #include <graphics/transform.h>
 #include <graphics/viewport.h>
 
-#include <game/box2d/box2dscenelayer.h>
 #include <game/enginebase.h>
-#include <game/scene.h>
+#include <game/entity.h>
+#include <game/entityscenelayer.h>
+#include <game/scenebase.h>
 #include <game/scenemanager.h>
-#include <game/tilemapscenelayer.h>
-
-#include <extra/tmxloader.h>
-
-#include "customfactory.h"
-
-MARSHMALLOW_NAMESPACE_USE;
-using namespace Core;
+#include <game/textcomponent.h>
 
 #define TIMEOUT 16
+#define MESSAGE "Marshmallow!\n123456790~!@#$%%^\nSecond %d"
+
+MARSHMALLOW_NAMESPACE_USE;
+
+class DemoScene : public Game::SceneBase
+{
+	bool m_init;
+
+public:
+
+	DemoScene(void)
+	: SceneBase("DemoScene"),
+	  m_init(false)
+	  {}
+	
+	virtual ~DemoScene(void) {};
+
+	VIRTUAL void activate(void)
+	{
+		SceneBase::activate();
+
+		if (!m_init) {
+			m_init = true;
+
+			Graphics::SharedTextureData l_texture = Graphics::Factory::CreateTextureData();
+			l_texture->load("assets/terminus.png");
+			assert(l_texture->isLoaded() && "Failed to load tilemap asset!");
+
+			Graphics::SharedTilesetBase l_tileset = new Graphics::Tileset;
+			l_tileset->setTileSize(Math::Size2i(16, 32));
+			l_tileset->setTextureData(l_texture);
+
+			Game::SharedEntitySceneLayer l_elayer = new Game::EntitySceneLayer("entity", *this);
+			Game::SharedEntity l_entity = new Game::Entity("text", *l_elayer);
+			Game::SharedTextComponent l_tcomp = new Game::TextComponent("txt", *l_entity);
+			l_elayer->addEntity(l_entity);
+			l_tcomp->text() = "Hello World!";
+			l_tcomp->tileset() = l_tileset.staticCast<Graphics::ITileset>();
+			l_entity->pushComponent(l_tcomp.staticCast<Game::IComponent>());
+			pushLayer(l_elayer.staticCast<Game::ISceneLayer>());
+		}
+	}
+
+	VIRTUAL const Core::Type & type(void) const
+	{
+		static const Core::Type s_type("DemoScene");
+		return(s_type);
+	}
+};
 
 class Demo : public Game::EngineBase
 {
@@ -58,35 +99,17 @@ class Demo : public Game::EngineBase
 public:
 
 	Demo(void)
-	: EngineBase(60, 60, true),
+	: EngineBase(60, 60),
 	  m_stop_timer(0)
 	{
 	}
 
 	VIRTUAL bool initialize(void)
 	{
-		setFactory(new CustomFactory);
+		EngineBase::initialize();
 
-		if (!EngineBase::initialize())
-			return(false);
-
-		Game::SharedScene l_scene(new Game::Scene("main"));
-
-		/* box2d layer */
-		Game::SharedBox2DSceneLayer l_box2d_layer
-		    (new Game::Box2DSceneLayer("box2d", *l_scene));
-		l_box2d_layer->setGravity(Math::Vector2(0., 0.));
-		l_scene->pushLayer(l_box2d_layer.staticCast<Game::ISceneLayer>());
-
-		/* load tmx tilemap */
-		Extra::TMXLoader m_tmxloader(*l_scene);
-		m_tmxloader.load("assets/sewers.tmx");
-		assert(m_tmxloader.isLoaded() && "TMX tilemap failed to load.");
-
+		Game::SharedScene l_scene(new DemoScene);
 		sceneManager()->pushScene(l_scene);
-
-		Graphics::Transform &l_camera = Graphics::Viewport::Camera();
-		l_camera.setScale(Math::Pair(3.f, 3.f));
 
 		return(true);
 	}
@@ -97,6 +120,18 @@ public:
 
 		if (++m_stop_timer == TIMEOUT)
 			stop();
+
+		Game::SharedEntitySceneLayer l_eslayer =
+		    sceneManager()->activeScene()->getLayer("entity").staticCast<Game::EntitySceneLayer>();
+
+		Game::SharedEntity l_entity = l_eslayer->getEntity("text");
+
+		Game::SharedTextComponent l_tcomp =
+		    l_entity->getComponent("txt").staticCast<Game::TextComponent>();
+
+		char l_message[60];
+		sprintf(l_message, MESSAGE, m_stop_timer);
+		l_tcomp->text() = l_message;
 	}
 };
 
@@ -105,10 +140,8 @@ MMain(int argc, char *argv[])
 {
 	MMUNUSED(argc);
 	MMUNUSED(argv);
-
 	if (-1 == CHDIR(DEMO_CWD))
 		MMFATAL("Failed to change working directory: ""%s"". ABORT!", DEMO_CWD);
-
 	return(Demo().run());
 }
 

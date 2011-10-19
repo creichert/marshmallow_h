@@ -34,69 +34,81 @@
  * @author Guillermo A. Amaral B. (gamaral) <g@maral.me>
  */
 
-#ifndef TILEMAP_INPUTCOMPONENT_H
-#define TILEMAP_INPUTCOMPONENT_H 1
+#ifndef GAME_TEXTCOMPONENT_H
+#define GAME_TEXTCOMPONENT_H 1
 
-#include <EASTL/list.h>
+#include "game/componentbase.h"
 
-#include <game/componentbase.h>
-#include <event/ieventlistener.h>
+#include "core/string.h"
+#include "core/weak.h"
 
-#include <game/box2d/box2dcomponent.h>
-#include <game/positioncomponent.h>
+#include "math/size2.h"
 
-MARSHMALLOW_NAMESPACE_USE;
+MARSHMALLOW_NAMESPACE_BEGIN
 
-class InputComponent : public Game::ComponentBase,
-                       public Event::IEventListener
+namespace Graphics
 {
-	NO_ASSIGN(InputComponent);
-	NO_COPY(InputComponent);
+	struct ITileset;
+	typedef Core::Shared<ITileset> SharedTileset;
+}
 
-	Game::WeakPositionComponent m_position;
-	Game::WeakBox2DComponent m_body;
-	Event::SharedEventListener m_event_proxy;
+namespace Game
+{
 
-	eastl::list<int> m_direction_stack;
-	float m_linear_impulse;
-	int   m_direction;
-	bool  m_down;
-	bool  m_left;
-	bool  m_right;
-	bool  m_up;
+	class PositionComponent;
+	typedef Core::Weak<PositionComponent> WeakPositionComponent;
 
-public:
+	/*! @brief Game Text Component Class */
+	class GAME_EXPORT TextComponent : public ComponentBase
+	{
+		NO_ASSIGN(TextComponent);
+		NO_COPY(TextComponent);
 
-	InputComponent(const Core::Identifier &identifier, Game::IEntity &entity);
-	virtual ~InputComponent(void);
+		Math::Size2f m_font_size;
+		Graphics::SharedTileset m_tileset;
+		Core::String m_text;
+		int m_tile_offset;
 
-	enum Direction {
-		ICDDown  = 0,
-		ICDLeft  = 1,
-		ICDRight = 2,
-		ICDUp    = 3
+	public:
+
+		TextComponent(const Core::Identifier &i, IEntity &entity);
+		virtual ~TextComponent(void);
+
+		Math::Size2f & fontSize(void)
+			{ return(m_font_size); }
+
+		Graphics::SharedTileset & tileset(void)
+			{ return(m_tileset); }
+
+		Core::String & text(void)
+			{ return(m_text); }
+
+		int & tileOffset(void)
+			{ return(m_tile_offset); }
+
+	public: /* virtual */
+
+		VIRTUAL const Core::Type & type(void) const
+		    { return(Type()); }
+
+		VIRTUAL void render(void);
+		VIRTUAL void update(TIME d);
+
+		VIRTUAL bool serialize(TinyXML::TiXmlElement &node) const;
+		VIRTUAL bool deserialize(TinyXML::TiXmlElement &node);
+
+	protected:
+
+		void reset(void);
+
+	public: /* static */
+
+		static const Core::Type & Type(void);
 	};
+	typedef Core::Shared<TextComponent> SharedTextComponent;
+	typedef Core::Weak<TextComponent> WeakTextComponent;
+}
 
-	Direction direction(void) const
-	    { return(static_cast<Direction>(m_direction)); }
-
-	bool inMotion(void) const;
-
-public: /* virtual */
-
-	VIRTUAL const Core::Type & type(void) const
-	    { return(Type); }
-
-	VIRTUAL void update(TIME d);
-
-	VIRTUAL bool handleEvent(const Event::IEvent &event);
-
-public: /* static */
-
-	static const Core::Type Type;
-};
-typedef Core::Shared<InputComponent> SharedInputComponent;
-
+MARSHMALLOW_NAMESPACE_END
 
 #endif
-
